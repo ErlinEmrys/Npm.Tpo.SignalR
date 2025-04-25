@@ -292,7 +292,7 @@ Third party licenses
 > Authors: Sebastian Mayr
 >
 > License:
->> MIT
+>> [MIT](https://spdx.org/licenses/MIT.html)
 >
 
 > universalify [0.2.0]

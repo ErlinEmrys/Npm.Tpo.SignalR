@@ -27,7 +27,7 @@ function ProcessPackages( onlyProd )
 			try
 			{
 				const data = JSON.parse( stdout );
-				FormatJson( onlyProd, data );
+				// FormatJson( onlyProd, data );
 				WriteOutputMD( data );
 			}
 			catch( e )
@@ -96,10 +96,13 @@ function GetLicenceFile( packagePath )
 		}
 	}
 
-	if( !licenseFileContent )
-	{
-		console.error( `FILE NOT FOUND: ${ packagePath }` ); // eslint-disable-line no-console
-	}
+	/*
+	 if( !licenseFileContent )
+	 {
+	 console.error( `FILE NOT FOUND: ${ packagePath }` ); // eslint-disable-line no-console
+	 }
+	 */
+
 	return licenseFileContent;
 }
 
@@ -139,15 +142,27 @@ function WriteOutputMD( data )
 				}
 				else
 				{
-					result = WriteLineMD( result, fPackage.license, 2 );
+					let url = fPackage.license;
+					if( IsUrl( url ) )
+					{
+						result = WriteLineMD( result, `<${ url }>`, 2 );
+					}
+					else
+					{
+						url = `https://spdx.org/licenses/${url}.html`;
+						if( IsUrl( url ) )
+						{
+							result = WriteLineMD( result, `[${ fPackage.license }](${ url })`, 2 );
+						}
+						else
+						{
+							result = WriteLineMD( result, fPackage.license, 2 );
+						}
+					}
 				}
 
 				result = WriteLineMD( result, undefined, 1 );
 				result = WriteLineMD( result );
-
-				const packInfo = {
-					Name: fPackage.name.slice( fPackage.name.startsWith( "@" ) ? 1 : 0 ), Version: fPackage.versions[ i ], Authors: fPackage.author, Homepage: fPackage.homepage, LicenseType: fPackage.license, LicenseOriginal: GetLicenceFile( fPackage.paths[ i ] ),
-				};
 			}
 		}
 	} );
@@ -204,4 +219,17 @@ function WriteIndentationMD( result, text, indentation )
 	}
 
 	return result;
+}
+
+function IsUrl( string )
+{
+	try
+	{
+		const url = new URL( string );
+		return url.protocol === "http:" || url.protocol === "https:";
+	}
+	catch( _ )
+	{
+		return false;
+	}
 }
