@@ -1,6 +1,7 @@
 # MIT License
 
-### Copyright © Erlin Emrys
+### Original code: Copyright (c) .NET Foundation and Contributors
+### Deviation from original code: Copyright © Erlin Emrys
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
