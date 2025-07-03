@@ -13,7 +13,6 @@
 	},
 	"sideEffects": false,
 	"scripts": {
-		"listlic": "node GenerateLicense.cjs",
 		"clean": "rimraf ./dist",
 		"prebuild": "rimraf ./src/pkg-version.ts && node -e \"const fs = require('fs'); const packageJson = require('./package.json'); fs.writeFileSync('./src/pkg-version.ts', 'export const VERSION = \\'' + packageJson.version + '\\';');\"",
 		"build": "npm run build:esm && npm run build:cjs && npm run build:browser && npm run build:webworker",
