@@ -1,4 +1,4 @@
-const baseConfig = require( "../webpack.config.base" );
+const baseConfig = require( "./webpack.config.base" );
 module.exports = env => baseConfig( __dirname, "signalr", {
 	// These are only used in Node environments
 	// so we tell webpack not to pull them in for the browser
