@@ -20,7 +20,12 @@
 		"build:cjs": "tsc --project ./tsconfig.json --module commonjs --outDir ./dist/cjs",
 		"build:browser": "webpack-cli",
 		"build:webworker": "webpack-cli --env platform=webworker",
-		"get-version": "node -e \"const { name, version } = require('./package.json'); console.log(`${name};${version}`);\""
+		"get-version": "node -e \"const { name, version } = require('./package.json'); console.log(`${name};${version}`);\"",
+		"pub": "pnpm build && pnpm publish"
+	},
+	"publishConfig": {
+		"access": "public",
+		"tag": "0.0.1-alpha"
 	},
 	"keywords": [
 		"signalr",
@@ -30,7 +35,7 @@
 		"type": "git",
 		"url": "git+https://github.com/ErlinEmrys/Npm.Tpo.SignalR.git"
 	},
-	"author": "Microsoft",
+	"author": "Microsoft + Erlin Emrys",
 	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/ErlinEmrys/Npm.Tpo.SignalR/issues"
