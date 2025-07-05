@@ -1,6 +1,6 @@
 {
 	"name": "@erlinemrys/signalr",
-	"version": "0.0.1-dev",
+	"version": "0.0.1-alpha.1",
 	"description": "ASP.NET Core SignalR Client",
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
@@ -25,7 +25,7 @@
 	},
 	"publishConfig": {
 		"access": "public",
-		"tag": "0.0.1-alpha"
+		"tag": "0.0.1-alpha.1"
 	},
 	"keywords": [
 		"signalr",
