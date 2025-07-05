@@ -1,5 +1,5 @@
 {
-	"name": "@erlin_emrys/signalr",
+	"name": "@erlinemrys/signalr",
 	"version": "0.0.1-dev",
 	"description": "ASP.NET Core SignalR Client",
 	"main": "./dist/cjs/index.js",
