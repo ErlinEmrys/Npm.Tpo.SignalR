@@ -159,7 +159,7 @@ export class FetchHttpClient extends HttpClient
 		if( !response.ok )
 		{
 			const errorMessage = await deserializeContent( response, "text" ) as string;
-			throw new HttpError( errorMessage || response.statusText, response.status );
+			throw new HttpError( errorMessage || response.statusText, response.status, response );
 		}
 
 		const content = deserializeContent( response, request.responseType );

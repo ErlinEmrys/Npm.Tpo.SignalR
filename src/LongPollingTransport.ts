@@ -80,7 +80,7 @@ export class LongPollingTransport implements ITransport
 			this._logger.Err( `(LongPolling transport) Unexpected response code: ${ response.statusCode }.` );
 
 			// Mark running as false so that the poll immediately ends and runs the close logic
-			this._closeError = new HttpError( response.statusText || "", response.statusCode );
+			this._closeError = new HttpError( response.statusText || "", response.statusCode, response );
 			this._running = false;
 		}
 		else
@@ -114,7 +114,7 @@ export class LongPollingTransport implements ITransport
 						this._logger.Err( `(LongPolling transport) Unexpected response code: ${ response.statusCode }.` );
 
 						// Unexpected status code
-						this._closeError = new HttpError( response.statusText || "", response.statusCode );
+						this._closeError = new HttpError( response.statusText || "", response.statusCode, response );
 						this._running = false;
 					}
 					else

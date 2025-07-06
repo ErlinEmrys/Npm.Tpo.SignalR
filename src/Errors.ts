@@ -1,7 +1,24 @@
 ﻿import { HttpTransportType } from "./ITransport";
 
+/** Error that contains object explaining reason for this error */
+export class ReasonedError extends Error
+{
+	public reason?: unknown;
+
+	/** Constructs a new instance of {@link @microsoft/signalr.ReasonedError}.
+	 *
+	 * @param {string} message A descriptive error message.
+	 * @param {object} reason Reason of this error
+	 */
+	constructor( message : string, reason: unknown )
+	{
+		super( message );
+		this.reason = reason;
+	}
+}
+
 /** Error thrown when an HTTP request fails. */
-export class HttpError extends Error
+export class HttpError extends ReasonedError
 {
 	// @ts-ignore: Intentionally unused.
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -14,11 +31,12 @@ export class HttpError extends Error
 	 *
 	 * @param {string} errorMessage A descriptive error message.
 	 * @param {number} statusCode The HTTP status code represented by this error.
+	 * @param {object} reason Reason of this error
 	 */
-	constructor( errorMessage: string, statusCode: number )
+	constructor( errorMessage: string, statusCode: number, reason: unknown )
 	{
 		const trueProto = new.target.prototype;
-		super( `${ errorMessage }: Status code '${ statusCode }'` );
+		super( `${ errorMessage }: Status code '${ statusCode }'`, reason );
 		this.statusCode = statusCode;
 
 		// Workaround issue in Typescript compiler
@@ -137,7 +155,7 @@ export class DisabledTransportError extends Error
 
 /** Error thrown when the selected transport cannot be started. */
 /** @private */
-export class FailedToStartTransportError extends Error
+export class FailedToStartTransportError extends ReasonedError
 {
 	// @ts-ignore: Intentionally unused.
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -153,11 +171,12 @@ export class FailedToStartTransportError extends Error
 	 *
 	 * @param {string} message A descriptive error message.
 	 * @param {HttpTransportType} transport The {@link @microsoft/signalr.HttpTransportType} this error occurred on.
+	 * @param {object} reason Reason of this error
 	 */
-	constructor( message: string, transport: HttpTransportType )
+	constructor( message: string, transport: HttpTransportType, reason: unknown )
 	{
 		const trueProto = new.target.prototype;
-		super( message );
+		super( message, reason );
 		this.transport = transport;
 		this.errorType = "FailedToStartTransportError";
 
@@ -169,7 +188,7 @@ export class FailedToStartTransportError extends Error
 
 /** Error thrown when the negotiation with the server failed to complete. */
 /** @private */
-export class FailedToNegotiateWithServerError extends Error
+export class FailedToNegotiateWithServerError extends ReasonedError
 {
 	// @ts-ignore: Intentionally unused.
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -181,11 +200,12 @@ export class FailedToNegotiateWithServerError extends Error
 	/** Constructs a new instance of {@link @microsoft/signalr.FailedToNegotiateWithServerError}.
 	 *
 	 * @param {string} message A descriptive error message.
+	 * @param {object} reason Reason of this error
 	 */
-	constructor( message: string )
+	constructor( message: string, reason: unknown )
 	{
 		const trueProto = new.target.prototype;
-		super( message );
+		super( message, reason );
 		this.errorType = "FailedToNegotiateWithServerError";
 
 		// Workaround issue in Typescript compiler

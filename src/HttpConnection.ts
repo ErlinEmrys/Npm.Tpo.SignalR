@@ -352,7 +352,7 @@ export class HttpConnection implements IConnection
 		}
 		catch( e )
 		{
-			this._logger.Err( "Failed to start the connection: " + e );
+			this._logger.Err( "Failed to start the connection: ", e );
 			this._connectionState = ConnectionState.Disconnected;
 			this.transport = undefined;
 
@@ -391,7 +391,7 @@ export class HttpConnection implements IConnection
 
 			if( negotiateResponse.useStatefulReconnect && this._options._useStatefulReconnect !== true )
 			{
-				return Promise.reject( new FailedToNegotiateWithServerError( "Client didn't negotiate Stateful Reconnect but the server did." ) );
+				return Promise.reject( new FailedToNegotiateWithServerError( "Client didn't negotiate Stateful Reconnect but the server did.", negotiateResponse ) );
 			}
 
 			return negotiateResponse;
@@ -408,7 +408,7 @@ export class HttpConnection implements IConnection
 			}
 			this._logger.Err( errorMessage, e );
 
-			return Promise.reject( new FailedToNegotiateWithServerError( errorMessage ) );
+			return Promise.reject( new FailedToNegotiateWithServerError( errorMessage, e ) );
 		}
 	}
 
@@ -472,7 +472,7 @@ export class HttpConnection implements IConnection
 				{
 					this._logger.Err( `Failed to start the transport '${ endpoint.transport }': ${ ex }` );
 					negotiate = undefined;
-					transportExceptions.push( new FailedToStartTransportError( `${ endpoint.transport } failed: ${ ex }`, HttpTransportType[ endpoint.transport ] ) );
+					transportExceptions.push( new FailedToStartTransportError( `${ endpoint.transport } failed: ${ ex }`, HttpTransportType[ endpoint.transport ], ex ) );
 
 					if( this._connectionState !== ConnectionState.Connecting )
 					{

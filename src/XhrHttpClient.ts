@@ -97,14 +97,14 @@ export class XhrHttpClient extends HttpClient
 				}
 				else
 				{
-					reject( new HttpError( xhr.response || xhr.responseText || xhr.statusText, xhr.status ) );
+					reject( new HttpError( xhr.response || xhr.responseText || xhr.statusText, xhr.status, xhr.response ) );
 				}
 			};
 
 			xhr.onerror = () =>
 			{
 				this._logger.Wrn( `Error from HTTP request. ${ xhr.status }: ${ xhr.statusText }.` );
-				reject( new HttpError( xhr.statusText, xhr.status ) );
+				reject( new HttpError( xhr.statusText, xhr.status, xhr.response ) );
 			};
 
 			xhr.ontimeout = () =>
