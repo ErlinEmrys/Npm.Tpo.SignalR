@@ -1,6 +1,6 @@
 import { HttpClient } from "./HttpClient";
 import { MessageHeaders } from "./IHubProtocol";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { HttpTransportType, ITransport } from "./ITransport";
 import { EventSourceConstructor, WebSocketConstructor } from "./Polyfills";
 
@@ -22,7 +22,7 @@ export interface IHttpConnectionOptions
 	 * the {@link @microsoft/signalr.LogLevel} enumeration and a default logger which logs to the Console will be configured to log messages of the specified
 	 * level (or higher).
 	 */
-	logger?: ILogger | LogLevel;
+	logger?: ILog;
 
 	/** A function that provides an access token required for HTTP Bearer authentication.
 	 *

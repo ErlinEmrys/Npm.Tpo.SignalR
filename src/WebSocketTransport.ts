@@ -1,7 +1,7 @@
 import { HeaderNames } from "./HeaderNames";
 import { HttpClient } from "./HttpClient";
 import { MessageHeaders } from "./IHubProtocol";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { ITransport, TransferFormat } from "./ITransport";
 import { WebSocketConstructor } from "./Polyfills";
 import { Arg, getDataDetail, getUserAgentHeader, Platform } from "./Utils";
@@ -9,7 +9,7 @@ import { Arg, getDataDetail, getUserAgentHeader, Platform } from "./Utils";
 /** @private */
 export class WebSocketTransport implements ITransport
 {
-	private readonly _logger: ILogger;
+	private readonly _logger: ILog;
 	private readonly _accessTokenFactory: ( () => string | Promise<string> ) | undefined;
 	private readonly _logMessageContent: boolean;
 	private readonly _webSocketConstructor: WebSocketConstructor;
@@ -20,7 +20,7 @@ export class WebSocketTransport implements ITransport
 	public onreceive: ( ( data: string | ArrayBuffer ) => void ) | null;
 	public onclose: ( ( error?: Error ) => void ) | null;
 
-	constructor( httpClient: HttpClient, accessTokenFactory: ( () => string | Promise<string> ) | undefined, logger: ILogger, logMessageContent: boolean, webSocketConstructor: WebSocketConstructor, headers: MessageHeaders )
+	constructor( httpClient: HttpClient, accessTokenFactory: ( () => string | Promise<string> ) | undefined, logger: ILog, logMessageContent: boolean, webSocketConstructor: WebSocketConstructor, headers: MessageHeaders )
 	{
 		this._logger = logger;
 		this._accessTokenFactory = accessTokenFactory;
@@ -38,7 +38,7 @@ export class WebSocketTransport implements ITransport
 		Arg.isRequired( url, "url" );
 		Arg.isRequired( transferFormat, "transferFormat" );
 		Arg.isIn( transferFormat, TransferFormat, "transferFormat" );
-		this._logger.log( LogLevel.Trace, "(WebSockets transport) Connecting." );
+		this._logger.Trc( "(WebSockets transport) Connecting." );
 
 		let token: string;
 		if( this._accessTokenFactory )
@@ -94,7 +94,7 @@ export class WebSocketTransport implements ITransport
 
 			webSocket.onopen = ( _event: Event ) =>
 			{
-				this._logger.log( LogLevel.Information, `WebSocket connected to ${ url }.` );
+				this._logger.Inf( `WebSocket connected to ${ url }.` );
 				this._webSocket = webSocket;
 				opened = true;
 				resolve();
@@ -113,12 +113,12 @@ export class WebSocketTransport implements ITransport
 					error = "There was an error with the transport";
 				}
 
-				this._logger.log( LogLevel.Information, `(WebSockets transport) ${ error }.` );
+				this._logger.Inf( `(WebSockets transport) ${ error }.` );
 			};
 
 			webSocket.onmessage = ( message: MessageEvent ) =>
 			{
-				this._logger.log( LogLevel.Trace, `(WebSockets transport) data received. ${ getDataDetail( message.data, this._logMessageContent ) }.` );
+				this._logger.Trc( `(WebSockets transport) data received. ${ getDataDetail( message.data, this._logMessageContent ) }.` );
 				if( this.onreceive )
 				{
 					try
@@ -164,7 +164,7 @@ export class WebSocketTransport implements ITransport
 	{
 		if( this._webSocket && this._webSocket.readyState === this._webSocketConstructor.OPEN )
 		{
-			this._logger.log( LogLevel.Trace, `(WebSockets transport) sending data. ${ getDataDetail( data, this._logMessageContent ) }.` );
+			this._logger.Trc( `(WebSockets transport) sending data. ${ getDataDetail( data, this._logMessageContent ) }.` );
 			this._webSocket.send( data );
 			return Promise.resolve();
 		}
@@ -197,7 +197,7 @@ export class WebSocketTransport implements ITransport
 			this._webSocket = undefined;
 		}
 
-		this._logger.log( LogLevel.Trace, "(WebSockets transport) socket closed." );
+		this._logger.Trc( "(WebSockets transport) socket closed." );
 
 		if( this.onclose )
 		{

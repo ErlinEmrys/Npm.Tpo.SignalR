@@ -1,7 +1,7 @@
 import { AbortController } from "./AbortController";
 import { HttpError, TimeoutError } from "./Errors";
 import { HttpClient, HttpRequest } from "./HttpClient";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { ITransport, TransferFormat } from "./ITransport";
 import { Arg, getDataDetail, getUserAgentHeader, sendMessage } from "./Utils";
 import { IHttpConnectionOptions } from "./IHttpConnectionOptions";
@@ -11,7 +11,7 @@ import { IHttpConnectionOptions } from "./IHttpConnectionOptions";
 export class LongPollingTransport implements ITransport
 {
 	private readonly _httpClient: HttpClient;
-	private readonly _logger: ILogger;
+	private readonly _logger: ILog;
 	private readonly _options: IHttpConnectionOptions;
 	private readonly _pollAbort: AbortController;
 
@@ -29,7 +29,7 @@ export class LongPollingTransport implements ITransport
 		return this._pollAbort.aborted;
 	}
 
-	constructor( httpClient: HttpClient, logger: ILogger, options: IHttpConnectionOptions )
+	constructor( httpClient: HttpClient, logger: ILog, options: IHttpConnectionOptions )
 	{
 		this._httpClient = httpClient;
 		this._logger = logger;
@@ -50,7 +50,7 @@ export class LongPollingTransport implements ITransport
 
 		this._url = url;
 
-		this._logger.log( LogLevel.Trace, "(LongPolling transport) Connecting." );
+		this._logger.Trc( "(LongPolling transport) Connecting." );
 
 		// Allow binary format on Node and Browsers that support binary content (indicated by the presence of responseType property)
 		if( transferFormat === TransferFormat.Binary && ( typeof XMLHttpRequest !== "undefined" && typeof new XMLHttpRequest().responseType !== "string" ) )
@@ -73,11 +73,11 @@ export class LongPollingTransport implements ITransport
 		// Make initial long polling request
 		// Server uses first long polling request to finish initializing connection and it returns without data
 		const pollUrl = `${ url }&_=${ Date.now() }`;
-		this._logger.log( LogLevel.Trace, `(LongPolling transport) polling: ${ pollUrl }.` );
+		this._logger.Trc( `(LongPolling transport) polling: ${ pollUrl }.` );
 		const response = await this._httpClient.get( pollUrl, pollOptions );
 		if( response.statusCode !== 200 )
 		{
-			this._logger.log( LogLevel.Error, `(LongPolling transport) Unexpected response code: ${ response.statusCode }.` );
+			this._logger.Err( `(LongPolling transport) Unexpected response code: ${ response.statusCode }.` );
 
 			// Mark running as false so that the poll immediately ends and runs the close logic
 			this._closeError = new HttpError( response.statusText || "", response.statusCode );
@@ -100,18 +100,18 @@ export class LongPollingTransport implements ITransport
 				try
 				{
 					const pollUrl = `${ url }&_=${ Date.now() }`;
-					this._logger.log( LogLevel.Trace, `(LongPolling transport) polling: ${ pollUrl }.` );
+					this._logger.Trc( `(LongPolling transport) polling: ${ pollUrl }.` );
 					const response = await this._httpClient.get( pollUrl, pollOptions );
 
 					if( response.statusCode === 204 )
 					{
-						this._logger.log( LogLevel.Information, "(LongPolling transport) Poll terminated by server." );
+						this._logger.Inf( "(LongPolling transport) Poll terminated by server." );
 
 						this._running = false;
 					}
 					else if( response.statusCode !== 200 )
 					{
-						this._logger.log( LogLevel.Error, `(LongPolling transport) Unexpected response code: ${ response.statusCode }.` );
+						this._logger.Err( `(LongPolling transport) Unexpected response code: ${ response.statusCode }.` );
 
 						// Unexpected status code
 						this._closeError = new HttpError( response.statusText || "", response.statusCode );
@@ -122,7 +122,7 @@ export class LongPollingTransport implements ITransport
 						// Process the response
 						if( response.content )
 						{
-							this._logger.log( LogLevel.Trace, `(LongPolling transport) data received. ${ getDataDetail( response.content, this._options.logMessageContent! ) }.` );
+							this._logger.Trc( `(LongPolling transport) data received. ${ getDataDetail( response.content, this._options.logMessageContent! ) }.` );
 							if( this.onreceive )
 							{
 								this.onreceive( response.content );
@@ -131,7 +131,7 @@ export class LongPollingTransport implements ITransport
 						else
 						{
 							// This is another way timeout manifest.
-							this._logger.log( LogLevel.Trace, "(LongPolling transport) Poll timed out, reissuing." );
+							this._logger.Trc( "(LongPolling transport) Poll timed out, reissuing." );
 						}
 					}
 				}
@@ -140,14 +140,14 @@ export class LongPollingTransport implements ITransport
 					if( !this._running )
 					{
 						// Log but disregard errors that occur after stopping
-						this._logger.log( LogLevel.Trace, `(LongPolling transport) Poll errored after shutdown: ${ ( e as any ).message }` );
+						this._logger.Trc( `(LongPolling transport) Poll errored after shutdown: ${ ( e as any ).message }` );
 					}
 					else
 					{
 						if( e instanceof TimeoutError )
 						{
 							// Ignore timeouts and reissue the poll.
-							this._logger.log( LogLevel.Trace, "(LongPolling transport) Poll timed out, reissuing." );
+							this._logger.Trc( "(LongPolling transport) Poll timed out, reissuing." );
 						}
 						else
 						{
@@ -161,7 +161,7 @@ export class LongPollingTransport implements ITransport
 		}
 		finally
 		{
-			this._logger.log( LogLevel.Trace, "(LongPolling transport) Polling complete." );
+			this._logger.Trc( "(LongPolling transport) Polling complete." );
 
 			// We will reach here with pollAborted==false when the server returned a response causing the transport to stop.
 			// If pollAborted==true then client initiated the stop and the stop method will raise the close event after DELETE is sent.
@@ -183,7 +183,7 @@ export class LongPollingTransport implements ITransport
 
 	public async stop(): Promise<void>
 	{
-		this._logger.log( LogLevel.Trace, "(LongPolling transport) Stopping polling." );
+		this._logger.Trc( "(LongPolling transport) Stopping polling." );
 
 		// Tell receiving loop to stop, abort any current request, and then wait for it to finish
 		this._running = false;
@@ -194,7 +194,7 @@ export class LongPollingTransport implements ITransport
 			await this._receiving;
 
 			// Send DELETE to clean up long polling on the server
-			this._logger.log( LogLevel.Trace, `(LongPolling transport) sending DELETE request to ${ this._url }.` );
+			this._logger.Trc( `(LongPolling transport) sending DELETE request to ${ this._url }.` );
 
 			const headers: { [ k: string ]: string } = {};
 			const [ name, value ] = getUserAgentHeader();
@@ -220,23 +220,23 @@ export class LongPollingTransport implements ITransport
 				{
 					if( error.statusCode === 404 )
 					{
-						this._logger.log( LogLevel.Trace, "(LongPolling transport) A 404 response was returned from sending a DELETE request." );
+						this._logger.Trc( "(LongPolling transport) A 404 response was returned from sending a DELETE request." );
 					}
 					else
 					{
-						this._logger.log( LogLevel.Trace, `(LongPolling transport) Error sending a DELETE request: ${ error }` );
+						this._logger.Trc( `(LongPolling transport) Error sending a DELETE request: ${ error }` );
 					}
 				}
 			}
 			else
 			{
-				this._logger.log( LogLevel.Trace, "(LongPolling transport) DELETE request accepted." );
+				this._logger.Trc( "(LongPolling transport) DELETE request accepted." );
 			}
 
 		}
 		finally
 		{
-			this._logger.log( LogLevel.Trace, "(LongPolling transport) Stop finished." );
+			this._logger.Trc( "(LongPolling transport) Stop finished." );
 
 			// Raise close event here instead of in polling
 			// It needs to happen after the DELETE request is sent
@@ -253,7 +253,7 @@ export class LongPollingTransport implements ITransport
 			{
 				logMessage += " Error: " + this._closeError;
 			}
-			this._logger.log( LogLevel.Trace, logMessage );
+			this._logger.Trc( logMessage );
 			this.onclose( this._closeError );
 		}
 	}

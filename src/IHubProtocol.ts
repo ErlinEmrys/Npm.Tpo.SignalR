@@ -1,4 +1,4 @@
-﻿import { ILogger } from "./ILogger";
+﻿import { ILog } from "@erlinemrys/lib.common";
 import { TransferFormat } from "./ITransport";
 
 /** Defines the type of a Hub Message. */
@@ -168,9 +168,9 @@ export interface IHubProtocol
 	 * If {@link @microsoft/signalr.IHubProtocol.transferFormat} is 'Text', the `input` parameter must be a string, otherwise it must be an ArrayBuffer.
 	 *
 	 * @param {string | ArrayBuffer} input A string or ArrayBuffer containing the serialized representation.
-	 * @param {ILogger} logger A logger that will be used to log messages that occur during parsing.
+	 * @param {ILog} logger A logger that will be used to log messages that occur during parsing.
 	 */
-	parseMessages( input: string | ArrayBuffer, logger: ILogger ): HubMessage[];
+	parseMessages( input: string | ArrayBuffer, logger: ILog ): HubMessage[];
 
 	/** Writes the specified {@link @microsoft/signalr.HubMessage} to a string or ArrayBuffer and returns it.
 	 *

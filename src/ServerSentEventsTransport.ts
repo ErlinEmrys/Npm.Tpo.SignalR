@@ -1,6 +1,6 @@
 import { HttpClient } from "./HttpClient";
 import { MessageHeaders } from "./IHubProtocol";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { ITransport, TransferFormat } from "./ITransport";
 import { Arg, getDataDetail, getUserAgentHeader, Platform, sendMessage } from "./Utils";
 import { IHttpConnectionOptions } from "./IHttpConnectionOptions";
@@ -10,7 +10,7 @@ export class ServerSentEventsTransport implements ITransport
 {
 	private readonly _httpClient: HttpClient;
 	private readonly _accessToken: string | undefined;
-	private readonly _logger: ILogger;
+	private readonly _logger: ILog;
 	private readonly _options: IHttpConnectionOptions;
 	private _eventSource?: EventSource;
 	private _url?: string;
@@ -18,7 +18,7 @@ export class ServerSentEventsTransport implements ITransport
 	public onreceive: ( ( data: string | ArrayBuffer ) => void ) | null;
 	public onclose: ( ( error?: Error | unknown ) => void ) | null;
 
-	constructor( httpClient: HttpClient, accessToken: string | undefined, logger: ILogger, options: IHttpConnectionOptions )
+	constructor( httpClient: HttpClient, accessToken: string | undefined, logger: ILog, options: IHttpConnectionOptions )
 	{
 		this._httpClient = httpClient;
 		this._accessToken = accessToken;
@@ -35,7 +35,7 @@ export class ServerSentEventsTransport implements ITransport
 		Arg.isRequired( transferFormat, "transferFormat" );
 		Arg.isIn( transferFormat, TransferFormat, "transferFormat" );
 
-		this._logger.log( LogLevel.Trace, "(SSE transport) Connecting." );
+		this._logger.Trc( "(SSE transport) Connecting." );
 
 		// set url before accessTokenFactory because this._url is only for send and we set the auth header instead of the query string for send
 		this._url = url;
@@ -79,7 +79,7 @@ export class ServerSentEventsTransport implements ITransport
 					{
 						try
 						{
-							this._logger.log( LogLevel.Trace, `(SSE transport) data received. ${ getDataDetail( e.data, this._options.logMessageContent! ) }.` );
+							this._logger.Trc( `(SSE transport) data received. ${ getDataDetail( e.data, this._options.logMessageContent! ) }.` );
 							this.onreceive( e.data );
 						}
 						catch( error )
@@ -106,7 +106,7 @@ export class ServerSentEventsTransport implements ITransport
 
 				eventSource.onopen = () =>
 				{
-					this._logger.log( LogLevel.Information, `SSE connected to ${ this._url }` );
+					this._logger.Inf( `SSE connected to ${ this._url }` );
 					this._eventSource = eventSource;
 					opened = true;
 					resolve();

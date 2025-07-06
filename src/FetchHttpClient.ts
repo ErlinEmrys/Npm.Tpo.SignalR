@@ -3,7 +3,7 @@ import { CookieJar } from "@types/tough-cookie";
 
 import { AbortError, HttpError, TimeoutError } from "./Errors";
 import { HttpClient, HttpRequest, HttpResponse } from "./HttpClient";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { getGlobalThis, isArrayBuffer, Platform } from "./Utils";
 
 export class FetchHttpClient extends HttpClient
@@ -12,9 +12,9 @@ export class FetchHttpClient extends HttpClient
 	private readonly _fetchType: ( input: RequestInfo, init?: RequestInit ) => Promise<Response>;
 	private readonly _jar?: CookieJar;
 
-	private readonly _logger: ILogger;
+	private readonly _logger: ILog;
 
-	public constructor( logger: ILogger )
+	public constructor( logger: ILog )
 	{
 		super();
 		this._logger = logger;
@@ -103,7 +103,7 @@ export class FetchHttpClient extends HttpClient
 			timeoutId = setTimeout( () =>
 			{
 				abortController.abort();
-				this._logger.log( LogLevel.Warning, `Timeout from HTTP request.` );
+				this._logger.Wrn( `Timeout from HTTP request.` );
 				error = new TimeoutError();
 			}, msTimeout );
 		}
@@ -141,7 +141,7 @@ export class FetchHttpClient extends HttpClient
 			{
 				throw error;
 			}
-			this._logger.log( LogLevel.Warning, `Error from HTTP request. ${ e }.` );
+			this._logger.Wrn( `Error from HTTP request. ${ e }.` );
 			throw e;
 		}
 		finally

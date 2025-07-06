@@ -3,33 +3,13 @@ import { HttpConnection } from "./HttpConnection";
 import { HubConnection } from "./HubConnection";
 import { IHttpConnectionOptions } from "./IHttpConnectionOptions";
 import { IHubProtocol } from "./IHubProtocol";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { IRetryPolicy } from "./IRetryPolicy";
 import { IStatefulReconnectOptions } from "./IStatefulReconnectOptions";
 import { HttpTransportType } from "./ITransport";
 import { JsonHubProtocol } from "./JsonHubProtocol";
-import { NullLogger } from "./Loggers";
-import { Arg, ConsoleLogger } from "./Utils";
-
-const LogLevelNameMapping: { [ k: string ]: LogLevel } = {
-	trace: LogLevel.Trace, debug: LogLevel.Debug, info: LogLevel.Information, information: LogLevel.Information, warn: LogLevel.Warning, warning: LogLevel.Warning, error: LogLevel.Error, critical: LogLevel.Critical, none: LogLevel.None,
-};
-
-function parseLogLevel( name: string ): LogLevel
-{
-	// Case-insensitive matching via lower-casing
-	// Yes, I know case-folding is a complicated problem in Unicode, but we only support
-	// the ASCII strings defined in LogLevelNameMapping anyway, so it's fine -anurse.
-	const mapping = LogLevelNameMapping[ name.toLowerCase() ];
-	if( typeof mapping !== "undefined" )
-	{
-		return mapping;
-	}
-	else
-	{
-		throw new Error( `Unknown log level: ${ name }` );
-	}
-}
+import { Arg } from "./Utils";
+import { NullLogger } from "@erlinemrys/lib.common";
 
 /** A builder for configuring {@link @microsoft/signalr.HubConnection} instances. */
 export class HubConnectionBuilder
@@ -44,7 +24,7 @@ export class HubConnectionBuilder
 	/** @internal */
 	public url?: string;
 	/** @internal */
-	public logger?: ILogger;
+	public logger?: ILog;
 
 	/** If defined, this indicates the client should automatically attempt to reconnect if the connection is lost. */
 	/** @internal */
@@ -52,52 +32,16 @@ export class HubConnectionBuilder
 
 	private _statefulReconnectBufferSize?: number;
 
-	/** Configures console logging for the {@link @microsoft/signalr.HubConnection}.
-	 *
-	 * @param {LogLevel} logLevel The minimum level of messages to log. Anything at this level, or a more severe level, will be logged.
-	 * @returns The {@link @microsoft/signalr.HubConnectionBuilder} instance, for chaining.
-	 */
-	public configureLogging( logLevel: LogLevel ): HubConnectionBuilder;
-
 	/** Configures custom logging for the {@link @microsoft/signalr.HubConnection}.
 	 *
-	 * @param {ILogger} logger An object implementing the {@link @microsoft/signalr.ILogger} interface, which will be used to write all log messages.
+	 * @param {ILog} logger An object implementing the {@link @microsoft/signalr.ILogger} interface, which will be used to write all log messages.
 	 * @returns The {@link @microsoft/signalr.HubConnectionBuilder} instance, for chaining.
 	 */
-	public configureLogging( logger: ILogger ): HubConnectionBuilder;
-
-	/** Configures custom logging for the {@link @microsoft/signalr.HubConnection}.
-	 *
-	 * @param {string} logLevel A string representing a LogLevel setting a minimum level of messages to log.
-	 *    See {@link https://learn.microsoft.com/aspnet/core/signalr/configuration#configure-logging|the documentation for client logging configuration} for more details.
-	 */
-	public configureLogging( logLevel: string ): HubConnectionBuilder;
-
-	/** Configures custom logging for the {@link @microsoft/signalr.HubConnection}.
-	 *
-	 * @param {LogLevel | string | ILogger} logging A {@link @microsoft/signalr.LogLevel}, a string representing a LogLevel, or an object implementing the {@link @microsoft/signalr.ILogger} interface.
-	 *    See {@link https://learn.microsoft.com/aspnet/core/signalr/configuration#configure-logging|the documentation for client logging configuration} for more details.
-	 * @returns The {@link @microsoft/signalr.HubConnectionBuilder} instance, for chaining.
-	 */
-	public configureLogging( logging: LogLevel | string | ILogger ): HubConnectionBuilder;
-	public configureLogging( logging: LogLevel | string | ILogger ): HubConnectionBuilder
+	public configureLogging( logger?: ILog ): HubConnectionBuilder
 	{
-		Arg.isRequired( logging, "logging" );
+		Arg.isRequired( logger, "logger" );
 
-		if( isLogger( logging ) )
-		{
-			this.logger = logging;
-		}
-		else if( typeof logging === "string" )
-		{
-			const logLevel = parseLogLevel( logging );
-			this.logger = new ConsoleLogger( logLevel );
-		}
-		else
-		{
-			this.logger = new ConsoleLogger( logging );
-		}
-
+		this.logger = logger;
 		return this;
 	}
 
@@ -267,11 +211,6 @@ export class HubConnectionBuilder
 		}
 		const connection = new HttpConnection( this.url, httpConnectionOptions );
 
-		return HubConnection.create( connection, this.logger || NullLogger.instance, this.protocol || new JsonHubProtocol(), this.reconnectPolicy, this._serverTimeoutInMilliseconds, this._keepAliveIntervalInMilliseconds, this._statefulReconnectBufferSize );
+		return HubConnection.create( connection, this.logger || NullLogger.Instance, this.protocol || new JsonHubProtocol(), this.reconnectPolicy, this._serverTimeoutInMilliseconds, this._keepAliveIntervalInMilliseconds, this._statefulReconnectBufferSize );
 	}
-}
-
-function isLogger( logger: any ): logger is ILogger
-{
-	return logger.log !== undefined;
 }

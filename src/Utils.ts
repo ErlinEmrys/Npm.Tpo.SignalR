@@ -1,6 +1,5 @@
 import { HttpClient } from "./HttpClient";
-import { ILogger, LogLevel } from "./ILogger";
-import { NullLogger } from "./Loggers";
+import { ILog } from "@erlinemrys/lib.common";
 import { IStreamSubscriber, ISubscription } from "./Stream";
 import { Subject } from "./Subject";
 import { IHttpConnectionOptions } from "./IHttpConnectionOptions";
@@ -118,42 +117,21 @@ export function isArrayBuffer( val: any ): val is ArrayBuffer
 }
 
 /** @private */
-export async function sendMessage( logger: ILogger, transportName: string, httpClient: HttpClient, url: string, content: string | ArrayBuffer, options: IHttpConnectionOptions ): Promise<void>
+export async function sendMessage( logger: ILog, transportName: string, httpClient: HttpClient, url: string, content: string | ArrayBuffer, options: IHttpConnectionOptions ): Promise<void>
 {
 	const headers: { [ k: string ]: string } = {};
 
 	const [ name, value ] = getUserAgentHeader();
 	headers[ name ] = value;
 
-	logger.log( LogLevel.Trace, `(${ transportName } transport) sending data. ${ getDataDetail( content, options.logMessageContent! ) }.` );
+	logger.Trc( `(${ transportName } transport) sending data. ${ getDataDetail( content, options.logMessageContent! ) }.` );
 
 	const responseType = isArrayBuffer( content ) ? "arraybuffer" : "text";
 	const response = await httpClient.post( url, {
 		content, headers: { ...headers, ...options.headers }, responseType, timeout: options.timeout, withCredentials: options.withCredentials,
 	} );
 
-	logger.log( LogLevel.Trace, `(${ transportName } transport) request complete. Response status: ${ response.statusCode }.` );
-}
-
-/** @private */
-export function createLogger( logger?: ILogger | LogLevel ): ILogger
-{
-	if( logger === undefined )
-	{
-		return new ConsoleLogger( LogLevel.Information );
-	}
-
-	if( logger === null )
-	{
-		return NullLogger.instance;
-	}
-
-	if( ( logger as ILogger ).log !== undefined )
-	{
-		return logger as ILogger;
-	}
-
-	return new ConsoleLogger( logger as LogLevel );
+	logger.Trc( `(${ transportName } transport) request complete. Response status: ${ response.statusCode }.` );
 }
 
 /** @private */
@@ -179,48 +157,6 @@ export class SubjectSubscription<T> implements ISubscription<T>
 		if( this._subject.observers.length === 0 && this._subject.cancelCallback )
 		{
 			this._subject.cancelCallback().catch( ( _ ) => { } );
-		}
-	}
-}
-
-/** @private */
-export class ConsoleLogger implements ILogger
-{
-	private readonly _minLevel: LogLevel;
-
-	// Public for testing purposes.
-	public out: {
-		error( message: any ): void, warn( message: any ): void, info( message: any ): void, log( message: any ): void,
-	};
-
-	constructor( minimumLogLevel: LogLevel )
-	{
-		this._minLevel = minimumLogLevel;
-		this.out = console;
-	}
-
-	public log( logLevel: LogLevel, message: string ): void
-	{
-		if( logLevel >= this._minLevel )
-		{
-			const msg = `[${ new Date().toISOString() }] ${ LogLevel[ logLevel ] }: ${ message }`;
-			switch( logLevel )
-			{
-				case LogLevel.Critical:
-				case LogLevel.Error:
-					this.out.error( msg );
-					break;
-				case LogLevel.Warning:
-					this.out.warn( msg );
-					break;
-				case LogLevel.Information:
-					this.out.info( msg );
-					break;
-				default:
-					// console.debug only goes to attached debuggers in Node, so we use console.log for Trace and Debug
-					this.out.log( msg );
-					break;
-			}
 		}
 	}
 }

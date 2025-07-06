@@ -2,7 +2,7 @@ import { HandshakeProtocol, HandshakeRequestMessage, HandshakeResponseMessage } 
 import { IConnection } from "./IConnection";
 import { AbortError } from "./Errors";
 import { CancelInvocationMessage, CloseMessage, CompletionMessage, IHubProtocol, InvocationMessage, MessageType, StreamInvocationMessage, StreamItemMessage } from "./IHubProtocol";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { IRetryPolicy } from "./IRetryPolicy";
 import { IStreamResult } from "./Stream";
 import { Subject } from "./Subject";
@@ -31,7 +31,7 @@ export class HubConnection
 	// Needs to not start with _ for tests
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	private readonly connection: IConnection;
-	private readonly _logger: ILogger;
+	private readonly _logger: ILog;
 	private readonly _reconnectPolicy?: IRetryPolicy;
 	private readonly _statefulReconnectBufferSize: number;
 	private _protocol: IHubProtocol;
@@ -67,7 +67,7 @@ export class HubConnection
 
 	private _freezeEventListener = () =>
 	{
-		this._logger.log( LogLevel.Warning, "The page is being frozen, this will likely lead to the connection being closed and messages being lost. For more information see the docs at https://learn.microsoft.com/aspnet/core/signalr/javascript-client#bsleep" );
+		this._logger.Wrn( "The page is being frozen, this will likely lead to the connection being closed and messages being lost. For more information see the docs at https://learn.microsoft.com/aspnet/core/signalr/javascript-client#bsleep" );
 	};
 
 	/** The server timeout in milliseconds.
@@ -91,12 +91,12 @@ export class HubConnection
 	// create method that can be used by HubConnectionBuilder. An "internal" constructor would just
 	// be stripped away and the '.d.ts' file would have no constructor, which is interpreted as a
 	// public parameter-less constructor.
-	public static create( connection: IConnection, logger: ILogger, protocol: IHubProtocol, reconnectPolicy?: IRetryPolicy, serverTimeoutInMilliseconds?: number, keepAliveIntervalInMilliseconds?: number, statefulReconnectBufferSize?: number ): HubConnection
+	public static create( connection: IConnection, logger: ILog, protocol: IHubProtocol, reconnectPolicy?: IRetryPolicy, serverTimeoutInMilliseconds?: number, keepAliveIntervalInMilliseconds?: number, statefulReconnectBufferSize?: number ): HubConnection
 	{
 		return new HubConnection( connection, logger, protocol, reconnectPolicy, serverTimeoutInMilliseconds, keepAliveIntervalInMilliseconds, statefulReconnectBufferSize );
 	}
 
-	private constructor( connection: IConnection, logger: ILogger, protocol: IHubProtocol, reconnectPolicy?: IRetryPolicy, serverTimeoutInMilliseconds?: number, keepAliveIntervalInMilliseconds?: number, statefulReconnectBufferSize?: number )
+	private constructor( connection: IConnection, logger: ILog, protocol: IHubProtocol, reconnectPolicy?: IRetryPolicy, serverTimeoutInMilliseconds?: number, keepAliveIntervalInMilliseconds?: number, statefulReconnectBufferSize?: number )
 	{
 		Arg.isRequired( connection, "connection" );
 		Arg.isRequired( logger, "logger" );
@@ -187,7 +187,7 @@ export class HubConnection
 		}
 
 		this._connectionState = HubConnectionState.Connecting;
-		this._logger.log( LogLevel.Debug, "Starting HubConnection." );
+		this._logger.Dbg( "Starting HubConnection." );
 
 		try
 		{
@@ -201,12 +201,12 @@ export class HubConnection
 
 			this._connectionState = HubConnectionState.Connected;
 			this._connectionStarted = true;
-			this._logger.log( LogLevel.Debug, "HubConnection connected successfully." );
+			this._logger.Dbg( "HubConnection connected successfully." );
 		}
 		catch( e )
 		{
 			this._connectionState = HubConnectionState.Disconnected;
-			this._logger.log( LogLevel.Debug, `HubConnection failed to start successfully because of error '${ e }'.` );
+			this._logger.Dbg( `HubConnection failed to start successfully because of error '${ e }'.` );
 			return Promise.reject( e );
 		}
 	}
@@ -238,11 +238,11 @@ export class HubConnection
 				protocol: this._protocol.name, version,
 			};
 
-			this._logger.log( LogLevel.Debug, "Sending handshake request." );
+			this._logger.Dbg( "Sending handshake request." );
 
 			await this._sendMessage( this._handshakeProtocol.writeHandshakeRequest( handshakeRequest ) );
 
-			this._logger.log( LogLevel.Information, `Using HubProtocol '${ this._protocol.name }'.` );
+			this._logger.Inf( `Using HubProtocol '${ this._protocol.name }'.` );
 
 			// defensively cleanup timeout in case we receive a message from the server before we finish start
 			this._cleanupTimeout();
@@ -284,7 +284,7 @@ export class HubConnection
 		}
 		catch( e )
 		{
-			this._logger.log( LogLevel.Debug, `Hub handshake failed with error '${ e }' during start(). Stopping HubConnection.` );
+			this._logger.Dbg( `Hub handshake failed with error '${ e }' during start(). Stopping HubConnection.` );
 
 			this._cleanupTimeout();
 			this._cleanupPingTimer();
@@ -324,27 +324,27 @@ export class HubConnection
 	{
 		if( this._connectionState === HubConnectionState.Disconnected )
 		{
-			this._logger.log( LogLevel.Debug, `Call to HubConnection.stop(${ error }) ignored because it is already in the disconnected state.` );
+			this._logger.Dbg( `Call to HubConnection.stop(${ error }) ignored because it is already in the disconnected state.` );
 			return Promise.resolve();
 		}
 
 		if( this._connectionState === HubConnectionState.Disconnecting )
 		{
-			this._logger.log( LogLevel.Debug, `Call to HttpConnection.stop(${ error }) ignored because the connection is already in the disconnecting state.` );
+			this._logger.Dbg( `Call to HttpConnection.stop(${ error }) ignored because the connection is already in the disconnecting state.` );
 			return this._stopPromise!;
 		}
 
 		const state = this._connectionState;
 		this._connectionState = HubConnectionState.Disconnecting;
 
-		this._logger.log( LogLevel.Debug, "Stopping HubConnection." );
+		this._logger.Dbg( "Stopping HubConnection." );
 
 		if( this._reconnectDelayHandle )
 		{
 			// We're in a reconnect delay which means the underlying connection is currently already stopped.
 			// Just clear the handle to stop the reconnect loop (which no one is waiting on thankfully) and
 			// fire the onclose callbacks.
-			this._logger.log( LogLevel.Debug, "Connection stopped during reconnect delay. Done reconnecting." );
+			this._logger.Dbg( "Connection stopped during reconnect delay. Done reconnecting." );
 
 			clearTimeout( this._reconnectDelayHandle );
 			this._reconnectDelayHandle = undefined;
@@ -692,7 +692,7 @@ export class HubConnection
 						this._invokeClientMethod( message )
 							 .catch( ( e ) =>
 							 {
-								 this._logger.log( LogLevel.Error, `Invoke client method threw error: ${ getErrorString( e ) }` );
+								 this._logger.Err( `Invoke client method threw error: ${ getErrorString( e ) }` );
 							 } );
 						break;
 					case MessageType.StreamItem:
@@ -711,7 +711,7 @@ export class HubConnection
 							}
 							catch( e )
 							{
-								this._logger.log( LogLevel.Error, `Stream callback threw error: ${ getErrorString( e ) }` );
+								this._logger.Err( `Stream callback threw error: ${ getErrorString( e ) }` );
 							}
 						}
 						break;
@@ -721,7 +721,7 @@ export class HubConnection
 						break;
 					case MessageType.Close:
 					{
-						this._logger.log( LogLevel.Information, "Close message received from server." );
+						this._logger.Inf( "Close message received from server." );
 
 						const error = message.error ? new Error( "Server returned an error on close: " + message.error ) : undefined;
 
@@ -754,7 +754,7 @@ export class HubConnection
 						}
 						break;
 					default:
-						this._logger.log( LogLevel.Warning, `Invalid message type: ${ message.type }.` );
+						this._logger.Wrn( `Invalid message type: ${ message.type }.` );
 						break;
 				}
 			}
@@ -775,7 +775,7 @@ export class HubConnection
 		catch( e )
 		{
 			const message = "Error parsing handshake response: " + e;
-			this._logger.log( LogLevel.Error, message );
+			this._logger.Err( message );
 
 			const error = new Error( message );
 			this._handshakeRejecter( error );
@@ -784,7 +784,7 @@ export class HubConnection
 		if( responseMessage.error )
 		{
 			const message = "Server returned handshake error: " + responseMessage.error;
-			this._logger.log( LogLevel.Error, message );
+			this._logger.Err( message );
 
 			const error = new Error( message );
 			this._handshakeRejecter( error );
@@ -792,7 +792,7 @@ export class HubConnection
 		}
 		else
 		{
-			this._logger.log( LogLevel.Debug, "Server handshake complete." );
+			this._logger.Dbg( "Server handshake complete." );
 		}
 
 		this._handshakeResolver();
@@ -865,12 +865,12 @@ export class HubConnection
 		const methods = this._methods[ methodName ];
 		if( !methods )
 		{
-			this._logger.log( LogLevel.Warning, `No client method with the name '${ methodName }' found.` );
+			this._logger.Wrn( `No client method with the name '${ methodName }' found.` );
 
 			// No handlers provided by client but the server is expecting a response still, so we send an error
 			if( invocationMessage.invocationId )
 			{
-				this._logger.log( LogLevel.Warning, `No result given for '${ methodName }' method and invocation ID '${ invocationMessage.invocationId }'.` );
+				this._logger.Wrn( `No result given for '${ methodName }' method and invocation ID '${ invocationMessage.invocationId }'.` );
 				await this._sendWithProtocol( this._createCompletionMessage( invocationMessage.invocationId, "Client didn't provide a result.", null ) );
 			}
 			return;
@@ -893,7 +893,7 @@ export class HubConnection
 				res = await m.apply( this, invocationMessage.arguments );
 				if( expectsResponse && res && prevRes )
 				{
-					this._logger.log( LogLevel.Error, `Multiple results provided for '${ methodName }'. Sending error to server.` );
+					this._logger.Err( `Multiple results provided for '${ methodName }'. Sending error to server.` );
 					completionMessage = this._createCompletionMessage( invocationMessage.invocationId!, `Client provided multiple results.`, null );
 				}
 				// Ignore exception if we got a result after, the exception will be logged
@@ -902,7 +902,7 @@ export class HubConnection
 			catch( e )
 			{
 				exception = e;
-				this._logger.log( LogLevel.Error, `A callback for the method '${ methodName }' threw error '${ e }'.` );
+				this._logger.Err( `A callback for the method '${ methodName }' threw error '${ e }'.` );
 			}
 		}
 		if( completionMessage )
@@ -922,7 +922,7 @@ export class HubConnection
 			}
 			else
 			{
-				this._logger.log( LogLevel.Warning, `No result given for '${ methodName }' method and invocation ID '${ invocationMessage.invocationId }'.` );
+				this._logger.Wrn( `No result given for '${ methodName }' method and invocation ID '${ invocationMessage.invocationId }'.` );
 				// Client didn't provide a result or throw from a handler, server expects a response so we send an error
 				completionMessage = this._createCompletionMessage( invocationMessage.invocationId!, "Client didn't provide a result.", null );
 			}
@@ -932,14 +932,14 @@ export class HubConnection
 		{
 			if( res )
 			{
-				this._logger.log( LogLevel.Error, `Result given for '${ methodName }' method but server is not expecting a result.` );
+				this._logger.Err( `Result given for '${ methodName }' method but server is not expecting a result.` );
 			}
 		}
 	}
 
 	private _connectionClosed( error?: Error )
 	{
-		this._logger.log( LogLevel.Debug, `HubConnection.connectionClosed(${ error }) called while in state ${ this._connectionState }.` );
+		this._logger.Dbg( `HubConnection.connectionClosed(${ error }) called while in state ${ this._connectionState }.` );
 
 		// Triggering this.handshakeRejecter is insufficient because it could already be resolved without the continuation having run yet.
 		this._stopDuringStartError = this._stopDuringStartError || error || new AbortError( "The underlying connection was closed before the hub handshake could complete." );
@@ -1000,7 +1000,7 @@ export class HubConnection
 			}
 			catch( e )
 			{
-				this._logger.log( LogLevel.Error, `An onclose callback called with error '${ error }' threw error '${ e }'.` );
+				this._logger.Err( `An onclose callback called with error '${ error }' threw error '${ e }'.` );
 			}
 		}
 	}
@@ -1015,7 +1015,7 @@ export class HubConnection
 
 		if( nextRetryDelay === null )
 		{
-			this._logger.log( LogLevel.Debug, "Connection not reconnecting because the IRetryPolicy returned null on the first reconnect attempt." );
+			this._logger.Dbg( "Connection not reconnecting because the IRetryPolicy returned null on the first reconnect attempt." );
 			this._completeClose( error );
 			return;
 		}
@@ -1024,11 +1024,11 @@ export class HubConnection
 
 		if( error )
 		{
-			this._logger.log( LogLevel.Information, `Connection reconnecting because of error '${ error }'.` );
+			this._logger.Inf( `Connection reconnecting because of error '${ error }'.` );
 		}
 		else
 		{
-			this._logger.log( LogLevel.Information, "Connection reconnecting." );
+			this._logger.Inf( "Connection reconnecting." );
 		}
 
 		if( this._reconnectingCallbacks.length !== 0 )
@@ -1039,20 +1039,20 @@ export class HubConnection
 			}
 			catch( e )
 			{
-				this._logger.log( LogLevel.Error, `An onreconnecting callback called with error '${ error }' threw error '${ e }'.` );
+				this._logger.Err( `An onreconnecting callback called with error '${ error }' threw error '${ e }'.` );
 			}
 
 			// Exit early if an onreconnecting callback called connection.stop().
 			if( this._connectionState !== HubConnectionState.Reconnecting )
 			{
-				this._logger.log( LogLevel.Debug, "Connection left the reconnecting state in onreconnecting callback. Done reconnecting." );
+				this._logger.Dbg( "Connection left the reconnecting state in onreconnecting callback. Done reconnecting." );
 				return;
 			}
 		}
 
 		while( nextRetryDelay !== null )
 		{
-			this._logger.log( LogLevel.Information, `Reconnect attempt number ${ previousReconnectAttempts } will start in ${ nextRetryDelay } ms.` );
+			this._logger.Inf( `Reconnect attempt number ${ previousReconnectAttempts } will start in ${ nextRetryDelay } ms.` );
 
 			await new Promise( ( resolve ) =>
 			{
@@ -1062,7 +1062,7 @@ export class HubConnection
 
 			if( this._connectionState !== HubConnectionState.Reconnecting )
 			{
-				this._logger.log( LogLevel.Debug, "Connection left the reconnecting state during reconnect delay. Done reconnecting." );
+				this._logger.Dbg( "Connection left the reconnecting state during reconnect delay. Done reconnecting." );
 				return;
 			}
 
@@ -1071,7 +1071,7 @@ export class HubConnection
 				await this._startInternal();
 
 				this._connectionState = HubConnectionState.Connected;
-				this._logger.log( LogLevel.Information, "HubConnection reconnected successfully." );
+				this._logger.Inf( "HubConnection reconnected successfully." );
 
 				if( this._reconnectedCallbacks.length !== 0 )
 				{
@@ -1081,7 +1081,7 @@ export class HubConnection
 					}
 					catch( e )
 					{
-						this._logger.log( LogLevel.Error, `An onreconnected callback called with connectionId '${ this.connection.connectionId }; threw error '${ e }'.` );
+						this._logger.Err( `An onreconnected callback called with connectionId '${ this.connection.connectionId }; threw error '${ e }'.` );
 					}
 				}
 
@@ -1089,11 +1089,11 @@ export class HubConnection
 			}
 			catch( e )
 			{
-				this._logger.log( LogLevel.Information, `Reconnect attempt failed because of error '${ e }'.` );
+				this._logger.Inf( `Reconnect attempt failed because of error '${ e }'.` );
 
 				if( this._connectionState !== HubConnectionState.Reconnecting )
 				{
-					this._logger.log( LogLevel.Debug, `Connection moved to the '${ this._connectionState }' from the reconnecting state during reconnect attempt. Done reconnecting.` );
+					this._logger.Dbg( `Connection moved to the '${ this._connectionState }' from the reconnecting state during reconnect attempt. Done reconnecting.` );
 					// The TypeScript compiler thinks that connectionState must be Connected here. The TypeScript compiler is wrong.
 					if( this._connectionState as any === HubConnectionState.Disconnecting )
 					{
@@ -1107,7 +1107,7 @@ export class HubConnection
 			}
 		}
 
-		this._logger.log( LogLevel.Information, `Reconnect retries have been exhausted after ${ Date.now() - reconnectStartTime } ms and ${ previousReconnectAttempts } failed attempts. Connection disconnecting.` );
+		this._logger.Inf( `Reconnect retries have been exhausted after ${ Date.now() - reconnectStartTime } ms and ${ previousReconnectAttempts } failed attempts. Connection disconnecting.` );
 
 		this._completeClose();
 	}
@@ -1122,7 +1122,7 @@ export class HubConnection
 		}
 		catch( e )
 		{
-			this._logger.log( LogLevel.Error, `IRetryPolicy.nextRetryDelayInMilliseconds(${ previousRetryCount }, ${ elapsedMilliseconds }) threw error '${ e }'.` );
+			this._logger.Err( `IRetryPolicy.nextRetryDelayInMilliseconds(${ previousRetryCount }, ${ elapsedMilliseconds }) threw error '${ e }'.` );
 			return null;
 		}
 	}
@@ -1142,7 +1142,7 @@ export class HubConnection
 					}
 					catch( e )
 					{
-						this._logger.log( LogLevel.Error, `Stream 'error' callback called with '${ error }' threw error: ${ getErrorString( e ) }` );
+						this._logger.Err( `Stream 'error' callback called with '${ error }' threw error: ${ getErrorString( e ) }` );
 					}
 				} );
 	}

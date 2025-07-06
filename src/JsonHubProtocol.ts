@@ -1,8 +1,8 @@
 ﻿import { AckMessage, CompletionMessage, HubMessage, IHubProtocol, InvocationMessage, MessageType, SequenceMessage, StreamItemMessage } from "./IHubProtocol";
-import { ILogger, LogLevel } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { TransferFormat } from "./ITransport";
-import { NullLogger } from "./Loggers";
 import { TextMessageFormat } from "./TextMessageFormat";
+import { NullLogger } from "@erlinemrys/lib.common";
 
 const JSON_HUB_PROTOCOL_NAME: string = "json";
 
@@ -21,9 +21,9 @@ export class JsonHubProtocol implements IHubProtocol
 	/** Creates an array of {@link @microsoft/signalr.HubMessage} objects from the specified serialized representation.
 	 *
 	 * @param {string} input A string containing the serialized representation.
-	 * @param {ILogger} logger A logger that will be used to log messages that occur during parsing.
+	 * @param {ILog} logger A logger that will be used to log messages that occur during parsing.
 	 */
-	public parseMessages( input: string, logger: ILogger ): HubMessage[]
+	public parseMessages( input: string, logger: ILog ): HubMessage[]
 	{
 		// The interface does allow "ArrayBuffer" to be passed in, but this implementation does not. So let's throw a useful error.
 		if( typeof input !== "string" )
@@ -38,7 +38,7 @@ export class JsonHubProtocol implements IHubProtocol
 
 		if( logger === null )
 		{
-			logger = NullLogger.instance;
+			logger = NullLogger.Instance;
 		}
 
 		// Parse the messages
@@ -77,7 +77,7 @@ export class JsonHubProtocol implements IHubProtocol
 					break;
 				default:
 					// Future protocol changes can add message types, old clients can ignore them
-					logger.log( LogLevel.Information, "Unknown message type '" + parsedMessage.type + "' ignored." );
+					logger.Inf( "Unknown message type '" + parsedMessage.type + "' ignored." );
 					continue;
 			}
 			hubMessages.push( parsedMessage );

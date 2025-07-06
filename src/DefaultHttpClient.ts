@@ -1,7 +1,7 @@
 import { AbortError } from "./Errors";
 import { FetchHttpClient } from "./FetchHttpClient";
 import { HttpClient, HttpRequest, HttpResponse } from "./HttpClient";
-import { ILogger } from "./ILogger";
+import { ILog } from "@erlinemrys/lib.common";
 import { Platform } from "./Utils";
 import { XhrHttpClient } from "./XhrHttpClient";
 
@@ -11,7 +11,7 @@ export class DefaultHttpClient extends HttpClient
 	private readonly _httpClient: HttpClient;
 
 	/** Creates a new instance of the {@link @microsoft/signalr.DefaultHttpClient}, using the provided {@link @microsoft/signalr.ILogger} to log messages. */
-	public constructor( logger: ILogger )
+	public constructor( logger: ILog )
 	{
 		super();
 
