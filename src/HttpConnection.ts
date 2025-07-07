@@ -398,6 +398,7 @@ export class HttpConnection implements IConnection
 		}
 		catch( e )
 		{
+			let isError = true;
 			let errorMessage = "Failed to complete negotiation with the server!";
 			if( e instanceof HttpError )
 			{
@@ -405,8 +406,20 @@ export class HttpConnection implements IConnection
 				{
 					errorMessage = errorMessage + " Either this is not a SignalR endpoint or there is a proxy blocking the connection.";
 				}
+				else if( e.statusCode === 401 )
+				{
+					isError = false;
+				}
 			}
-			this._logger.Err( errorMessage, e );
+
+			if( isError )
+			{
+				this._logger.Err( errorMessage, e );
+			}
+			else
+			{
+				this._logger.Dbg( errorMessage, e );
+			}
 
 			return Promise.reject( new FailedToNegotiateWithServerError( errorMessage, e ) );
 		}
