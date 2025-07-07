@@ -35,6 +35,11 @@ export class HttpError extends ReasonedError
 	 */
 	constructor( errorMessage: string, statusCode: number, reason: unknown )
 	{
+		while( reason instanceof ReasonedError )
+		{
+			reason = reason.reason;
+		}
+
 		const trueProto = new.target.prototype;
 		super( `${ errorMessage }: Status code '${ statusCode }'`, reason );
 		this.statusCode = statusCode;
@@ -175,6 +180,11 @@ export class FailedToStartTransportError extends ReasonedError
 	 */
 	constructor( message: string, transport: HttpTransportType, reason: unknown )
 	{
+		while( reason instanceof ReasonedError )
+		{
+			reason = reason.reason;
+		}
+
 		const trueProto = new.target.prototype;
 		super( message, reason );
 		this.transport = transport;
@@ -204,6 +214,11 @@ export class FailedToNegotiateWithServerError extends ReasonedError
 	 */
 	constructor( message: string, reason: unknown )
 	{
+		while( reason instanceof ReasonedError )
+		{
+			reason = reason.reason;
+		}
+
 		const trueProto = new.target.prototype;
 		super( message, reason );
 		this.errorType = "FailedToNegotiateWithServerError";

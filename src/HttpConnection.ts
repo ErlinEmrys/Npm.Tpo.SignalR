@@ -398,7 +398,7 @@ export class HttpConnection implements IConnection
 		}
 		catch( e )
 		{
-			let errorMessage = "Failed to complete negotiation with the server! ";
+			let errorMessage = "Failed to complete negotiation with the server!";
 			if( e instanceof HttpError )
 			{
 				if( e.statusCode === 404 )
