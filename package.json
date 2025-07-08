@@ -1,6 +1,6 @@
 {
 	"name": "@erlinemrys/signalr",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "ASP.NET Core SignalR Client",
 	"main": "./dist/cjs/index.js",
 	"module": "./dist/esm/index.js",
@@ -13,8 +13,6 @@
 	},
 	"sideEffects": false,
 	"scripts": {
-		"lint": "eslint .",
-		"format": "eslint . --fix",
 		"clean": "rimraf ./dist",
 		"prebuild": "rimraf ./src/pkg-version.ts && node -e \"const fs = require('fs'); const packageJson = require('./package.json'); fs.writeFileSync('./src/pkg-version.ts', 'export const VERSION = \\'' + packageJson.version + '\\';');\"",
 		"build": "npm run build:esm && npm run build:cjs && npm run build:browser && npm run build:webworker",
@@ -55,7 +53,6 @@
 		"ws": "7.5.10"
 	},
 	"devDependencies": {
-		"@erlinemrys/eslint-config": "0.0.5",
 		"@types/node": "14.18.63",
 		"@typescript-eslint/eslint-plugin": "8.35.1",
 		"@typescript-eslint/parser": "8.35.1",

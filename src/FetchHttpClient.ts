@@ -156,6 +156,12 @@ export class FetchHttpClient extends HttpClient
 			}
 		}
 
+		if( response.status === 401 )
+		{
+			const errorData = await response.json();
+			throw new HttpError( response.statusText, response.status, errorData );
+		}
+
 		if( !response.ok )
 		{
 			const errorMessage = await deserializeContent( response, "text" ) as string;

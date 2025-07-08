@@ -352,7 +352,11 @@ export class HttpConnection implements IConnection
 		}
 		catch( e )
 		{
-			this._logger.Err( "Failed to start the connection: ", e );
+			if( !( e instanceof FailedToNegotiateWithServerError && !e.isError ) )
+			{
+				this._logger.Err( "Failed to start the connection: ", e );
+			}
+
 			this._connectionState = ConnectionState.Disconnected;
 			this.transport = undefined;
 
@@ -391,7 +395,7 @@ export class HttpConnection implements IConnection
 
 			if( negotiateResponse.useStatefulReconnect && this._options._useStatefulReconnect !== true )
 			{
-				return Promise.reject( new FailedToNegotiateWithServerError( "Client didn't negotiate Stateful Reconnect but the server did.", negotiateResponse ) );
+				return Promise.reject( new FailedToNegotiateWithServerError( "Client didn't negotiate Stateful Reconnect but the server did.", negotiateResponse, true ) );
 			}
 
 			return negotiateResponse;
@@ -421,7 +425,7 @@ export class HttpConnection implements IConnection
 				this._logger.Dbg( errorMessage, e );
 			}
 
-			return Promise.reject( new FailedToNegotiateWithServerError( errorMessage, e ) );
+			return Promise.reject( new FailedToNegotiateWithServerError( errorMessage, e, isError ) );
 		}
 	}
 

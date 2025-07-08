@@ -207,12 +207,15 @@ export class FailedToNegotiateWithServerError extends ReasonedError
 	/** The type name of this error. */
 	public errorType: string;
 
+	public isError: boolean;
+
 	/** Constructs a new instance of {@link @microsoft/signalr.FailedToNegotiateWithServerError}.
 	 *
 	 * @param {string} message A descriptive error message.
 	 * @param {object} reason Reason of this error
+	 * @param {boolean} isError If the error is unrecoverable
 	 */
-	constructor( message: string, reason: unknown )
+	constructor( message: string, reason: unknown, isError: boolean )
 	{
 		while( reason instanceof ReasonedError )
 		{
@@ -222,6 +225,7 @@ export class FailedToNegotiateWithServerError extends ReasonedError
 		const trueProto = new.target.prototype;
 		super( message, reason );
 		this.errorType = "FailedToNegotiateWithServerError";
+		this.isError = isError;
 
 		// Workaround issue in Typescript compiler
 		// https://github.com/Microsoft/TypeScript/issues/13965#issuecomment-278570200
