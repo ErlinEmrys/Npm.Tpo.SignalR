@@ -207,7 +207,6 @@ export function constructUserAgent( version: string, os: string, runtime: string
 }
 
 // eslint-disable-next-line spaced-comment
-/*#__PURE__*/
 function getOsName(): string
 {
 	if( Platform.isNode )
@@ -231,7 +230,6 @@ function getOsName(): string
 }
 
 // eslint-disable-next-line spaced-comment
-/*#__PURE__*/
 function getRuntimeVersion(): string | undefined
 {
 	if( Platform.isNode )
